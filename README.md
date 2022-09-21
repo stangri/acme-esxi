@@ -1,4 +1,4 @@
-*Originally a product of w2c/letsencrypt-esxi. Modified for those of us that are either unable or unwilling to expose our ESXi management interfaces to the Internet.*
+*Originally a product of acme/acme-esxi. Modified for those of us that are either unable or unwilling to expose our ESXi management interfaces to the Internet.*
 
 # Let's Encrypt for VMware ESXi
 
@@ -44,36 +44,36 @@ $ esxcli software vib install -v /tmp/acme-esxi.vib -f
 Installation Result
    Message: Operation finished successfully.
    Reboot Required: false
-   VIBs Installed: web-wack-creations_bootbank_acme-esxi_1.0.0-0.0.0
+   VIBs Installed: natethesage_bootbank_acme-esxi_1.0.0-0.0.0
    VIBs Removed:
    VIBs Skipped:
 
-$ esxcli software vib list | grep w2c
-acme-esxi  1.0.0-0.0.0  web-wack-creations  CommunitySupported  2022-05-29
+$ esxcli software vib list | grep acme
+acme-esxi  1.0.0-0.0.0  natethesage  CommunitySupported  2022-05-29
 
-$ cat /var/log/syslog.log | grep w2c
-2022-05-29T20:01:46Z /etc/init.d/w2c-letsencrypt: Running 'start' action
-2022-05-29T20:01:46Z /opt/w2c-letsencrypt/renew.sh: Starting certificate renewal.
-2022-05-29T20:01:46Z /opt/w2c-letsencrypt/renew.sh: Existing cert for example.com not issued by Let's Encrypt. Requesting a new one!
-2022-05-29T20:02:02Z /opt/w2c-letsencrypt/renew.sh: Success: Obtained and installed a certificate from Let's Encrypt.
+$ cat /var/log/syslog.log | grep acme
+2022-05-29T20:01:46Z /etc/init.d/acme-esxi: Running 'start' action
+2022-05-29T20:01:46Z /opt/acme-esxi/renew.sh: Starting certificate renewal.
+2022-05-29T20:01:46Z /opt/acme-esxi/renew.sh: Existing cert for example.com not issued by Let's Encrypt. Requesting a new one!
+2022-05-29T20:02:02Z /opt/acme-esxi/renew.sh: Success: Obtained and installed a certificate from Let's Encrypt.
 ```
 
 ### Web UI (= Embedded Host Client)
 
-1. _Storage -> Datastores:_ Use the Datastore browser to upload the [VIB file](https://github.com/w2c/letsencrypt-esxi/releases/latest/download/acme-esxi.vib) to a datastore path of your choice.
+1. _Storage -> Datastores:_ Use the Datastore browser to upload the [VIB file](https://github.com/acme/acme-esxi/releases/latest/download/acme-esxi.vib) to a datastore path of your choice.
 2. _Manage -> Security & users:_ Set the acceptance level of your host to _Community_.
 3. _Manage -> Packages:_ Switch to the list of installed packages, click on _Install update_ and enter the absolute path on the datastore where your just uploaded VIB file resides.
-4. While the VIB is installed, ESXi requests a certificate from Let's Encrypt. If you reload the Web UI afterwards, the newly requested certificate should already be active. If not, see the [Wiki](https://github.com/w2c/letsencrypt-esxi/wiki) for troubleshooting.
+4. While the VIB is installed, ESXi requests a certificate from Let's Encrypt. If you reload the Web UI afterwards, the newly requested certificate should already be active. If not, see the [Wiki](https://github.com/acme/acme-esxi/wiki) for troubleshooting.
 
 ### Optional Configuration
 
 If you want to try out the script before putting it into production, you may want to test against the [staging environment](https://letsencrypt.org/docs/staging-environment/) of Let's Encrypt. Probably, you also do not wish to renew certificates once in 30 days but in longer or shorter intervals. Most variables of `renew.sh` can be adjusted by creating a `renew.cfg` file with your overwritten values.
 
-`vi /opt/w2c-letsencrypt/renew.cfg`
+`vi /opt/acme-esxi/renew.cfg`
 
-For a non-default (i.e. private CA) configuration, you can also store your config file in `/etc/w2c-letsencrypt` and run `/sbin/auto-backup.sh` to persist your configuration.
+For a non-default (i.e. private CA) configuration, you can also store your config file in `/etc/acme-esxi` and run `/sbin/auto-backup.sh` to persist your configuration.
 
-`vi /etc/w2c-letsencrypt/renew.cfg`
+`vi /etc/acme-esxi/renew.cfg`
 `/sbin/auto-backup.sh`
 
 ```bash
@@ -87,7 +87,7 @@ OU="O=Let's Encrypt"
 RENEW_DAYS=15
 ```
 
-To apply your modifications, run `/etc/init.d/w2c-letsencrypt start`
+To apply your modifications, run `/etc/init.d/acme-esxi start`
 
 ## Uninstall
 
@@ -99,7 +99,7 @@ Removal Result
    Message: Operation finished successfully.
    Reboot Required: false
    VIBs Installed:
-   VIBs Removed: web-wack-creations_bootbank_acme-esxi_1.0.0-0.0.0
+   VIBs Removed: natethesage_bootbank_acme-esxi_1.0.0-0.0.0
    VIBs Skipped:
 ```
 
@@ -111,13 +111,13 @@ Usually, fully-automated. No interaction required.
 
 ### Hostname Change
 
-If you change the hostname on our ESXi instance, the domain the certificate is issued for will mismatch. In that case, either re-install `acme-esxi` or simply run `/etc/init.d/w2c-letsencrypt start`, e.g.:
+If you change the hostname on our ESXi instance, the domain the certificate is issued for will mismatch. In that case, either re-install `acme-esxi` or simply run `/etc/init.d/acme-esxi start`, e.g.:
 
 ```bash
 $ esxcfg-advcfg -s new-example.com /Misc/hostname
 Value of HostName is new-example.com
 
-$ /etc/init.d/w2c-letsencrypt start
+$ /etc/init.d/acme-esxi start
 Running 'start' action
 Starting certificate renewal.
 Existing cert issued for example.com but current domain name is new-example.com. Requesting a new one!
@@ -130,7 +130,7 @@ Generating RSA private key, 4096 bit long modulus
 You already have a valid certificate from Let's Encrypt but nonetheless want to renew it now:
 ```bash
 rm /etc/vmware/ssl/rui.crt
-/etc/init.d/w2c-letsencrypt start
+/etc/init.d/acme-esxi start
 ```
 
 ## How does it work?
@@ -149,7 +149,7 @@ rm /etc/vmware/ssl/rui.crt
 Here is a sample output when invoking the script manually via SSH:
 
 ```bash
-$ /etc/init.d/w2c-letsencrypt start
+$ /etc/init.d/acme-esxi start
 
 Running 'start' action
 Starting certificate renewal.
@@ -190,7 +190,7 @@ vvold is not running.
 
 ## Troubleshooting
 
-See the [Wiki](https://github.com/w2c/letsencrypt-esxi/wiki) for possible pitfalls and solutions.
+See the [Wiki](https://github.com/NateTheSage/acme-esxi/wiki) for possible pitfalls and solutions.
 
 ## License
 
