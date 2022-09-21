@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) Johannes Feichtner <johannes@web-wack.at>
+# Original script Copyright (c) Johannes Feichtner <johannes@web-wack.at>
 #
 # Script to build acme-esxi VIB using VIB Author
 
