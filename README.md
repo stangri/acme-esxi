@@ -1,4 +1,4 @@
-*Originally a product of acme/acme-esxi. Modified for those of us that are either unable or unwilling to expose our ESXi management interfaces to the Internet.*
+*Originally a product of w2c/letsencrypt-esxi. Modified for those of us that are either unable or unwilling to expose our ESXi management interfaces to the Internet.*
 
 # Let's Encrypt for VMware ESXi
 
