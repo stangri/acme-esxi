@@ -1,6 +1,8 @@
 #!/bin/sh
 #
-# Copyright (c) Johannes Feichtner <johannes@web-wack.at>
+# Original script Copyright (c) Johannes Feichtner <johannes@web-wack.at>
+# Modified slightly for acme-esxi
+#
 # Released under the GNU GPLv3 License.
 
 DOMAIN=$(grep "adv/Misc/HostName" /etc/vmware/esx.conf | awk '{print $3}' | xargs)
@@ -12,7 +14,7 @@ ACMEDIR="$LOCALDIR/.well-known/acme-challenge"
 DIRECTORY_URL="https://acme-v02.api.letsencrypt.org/directory"
 SSL_CERT_FILE="$LOCALDIR/ca-certificates.crt"
 RENEW_DAYS=30
-OU="O=Let's Encrypt"
+OU="O=Let's Encrypt / CA"
 
 ACCOUNTKEY="esxi_account.key"
 KEY="esxi.key"
@@ -20,6 +22,7 @@ CSR="esxi.csr"
 CRT="esxi.crt"
 VMWARE_CRT="/etc/vmware/ssl/rui.crt"
 VMWARE_KEY="/etc/vmware/ssl/rui.key"
+VMWARE_CA="/etc/vmware/ssl/castore.pem"
 
 if [ -r "$LOCALDIR/renew.cfg" ]; then
   . "$LOCALDIR/renew.cfg"
@@ -55,10 +58,10 @@ if [ -e "$VMWARE_CRT" ]; then
   SAN=$(openssl x509 -in "$VMWARE_CRT" -text -noout | grep DNS: | sed 's/DNS://g' | xargs)
   if [ "$SAN" != "$DOMAIN" ] ; then
     log "Existing cert issued for ${SAN} but current domain name is ${DOMAIN}. Requesting a new one!"
-  # If the cert is issued by Let's Encrypt or a private CA, check its expiration date, otherwise request a new one
+  # If the cert is issued by Let's Encrypt / CA or a private CA, check its expiration date, otherwise request a new one
   elif openssl x509 -in "$VMWARE_CRT" -issuer -noout | grep -q "$OU"; then
     CERT_VALID=$(openssl x509 -enddate -noout -in "$VMWARE_CRT" | cut -d= -f2-)
-    log "Existing Let's Encrypt cert valid until: ${CERT_VALID}"
+    log "Existing Let's Encrypt / CA cert valid until: ${CERT_VALID}"
     if openssl x509 -checkend $((RENEW_DAYS * 86400)) -noout -in "$VMWARE_CRT"; then
       log "=> Longer than ${RENEW_DAYS} days. Aborting."
       exit
@@ -66,7 +69,7 @@ if [ -e "$VMWARE_CRT" ]; then
       log "=> Less than ${RENEW_DAYS} days. Renewing!"
     fi
   else
-    log "Existing cert for ${DOMAIN} not issued by Let's Encrypt. Requesting a new one!"
+    log "Existing cert for ${DOMAIN} not issued by Let's Encrypt / CA / CA. Requesting a new one!"
   fi
 fi
 
@@ -103,9 +106,10 @@ if [ -n "$CERT" ] ; then
   # Provide the certificate to ESXi
   cp -p "$LOCALDIR/$KEY" "$VMWARE_KEY"
   cp -p "$LOCALDIR/$CRT" "$VMWARE_CRT"
-  log "Success: Obtained and installed a certificate from Let's Encrypt."
+  cp -p "$SSL_CERT_FILE" "$VMWARE_CA"
+  log "Success: Obtained and installed a certificate from Let's Encrypt / CA."
 else
-  log "Error: No cert obtained from Let's Encrypt. Generating a self-signed certificate."
+  log "Error: No cert obtained from Let's Encrypt / CA. Generating a self-signed certificate."
   /sbin/generate-certificates
 fi
 
