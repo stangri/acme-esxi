@@ -15,6 +15,7 @@ DIRECTORY_URL="https://acme-v02.api.letsencrypt.org/directory"
 SSL_CERT_FILE="$LOCALDIR/ca-certificates.crt"
 RENEW_DAYS=30
 OU="O=Let's Encrypt / CA"
+REGENERATE_CERT=true
 
 ACCOUNTKEY="esxi_account.key"
 KEY="esxi.key"
@@ -109,8 +110,10 @@ if [ -n "$CERT" ] ; then
   cp -p "$SSL_CERT_FILE" "$VMWARE_CA"
   log "Success: Obtained and installed a certificate from Let's Encrypt / CA."
 else
+  if [ "$REGENERATE_CERT" == false ]
   log "Error: No cert obtained from Let's Encrypt / CA. Generating a self-signed certificate."
   /sbin/generate-certificates
+  fi
 fi
 
 for s in /etc/init.d/*; do if $s | grep ssl_reset > /dev/null; then $s ssl_reset; fi; done
