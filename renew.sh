@@ -5,6 +5,8 @@
 #
 # Released under the GNU GPLv3 License.
 
+# shellcheck disable=SC1091,SC3060
+
 DOMAIN=$(grep "adv/Misc/HostName" /etc/vmware/esx.conf | awk '{print $3}' | xargs)
 LOCALDIR=$(dirname "$(readlink -f "$0")")
 LOCALSCRIPT=$(basename "$0")
@@ -16,6 +18,7 @@ SSL_CERT_FILE="$LOCALDIR/ca-certificates.crt"
 RENEW_DAYS=30
 OU="O=Let's Encrypt / CA"
 REGENERATE_CERT=true
+HTTP_PORT=8120
 
 ACCOUNTKEY="esxi_account.key"
 KEY="esxi.key"
@@ -77,9 +80,9 @@ fi
 cd "$LOCALDIR" || exit
 mkdir -p "$ACMEDIR"
 
-# Route /.well-known/acme-challenge to port 8120
+# Route /.well-known/acme-challenge to port $HTTP_PORT
 if ! grep -q "acme-challenge" /etc/vmware/rhttpproxy/endpoints.conf; then
-  echo "/.well-known/acme-challenge local 8120 redirect allow" >> /etc/vmware/rhttpproxy/endpoints.conf
+  echo "/.well-known/acme-challenge local $HTTP_PORT redirect allow" >> /etc/vmware/rhttpproxy/endpoints.conf
   /etc/init.d/rhttpproxy restart
 fi
 
@@ -90,9 +93,9 @@ openssl genrsa -out "$KEY" 4096
 openssl req -new -sha256 -key "$KEY" -subj "/CN=$DOMAIN" -config "./openssl.cnf" > "$CSR"
 chmod 0400 "$ACCOUNTKEY" "$KEY"
 
-# Start HTTP server on port 8120 for HTTP validation
+# Start HTTP server on port $HTTP_PORT for HTTP validation
 esxcli network firewall ruleset set -e true -r httpClient
-python -m "http.server" 8120 &
+python -m "http.server" "$$HTTP_PORT" &
 HTTP_SERVER_PID=$!
 
 # Retrieve the certificate
@@ -110,7 +113,7 @@ if [ -n "$CERT" ] ; then
   cp -p "$SSL_CERT_FILE" "$VMWARE_CA"
   log "Success: Obtained and installed a certificate from Let's Encrypt / CA."
 else
-  if [ "$REGENERATE_CERT" == false ]
+  if [ "$REGENERATE_CERT" = 'false' ]; then
   log "Error: No cert obtained from Let's Encrypt / CA. Generating a self-signed certificate."
   /sbin/generate-certificates
   fi
