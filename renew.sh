@@ -95,7 +95,7 @@ chmod 0400 "$ACCOUNTKEY" "$KEY"
 
 # Start HTTP server on port $HTTP_PORT for HTTP validation
 esxcli network firewall ruleset set -e true -r httpClient
-python -m "http.server" "$$HTTP_PORT" &
+python -m "http.server" "$HTTP_PORT" &
 HTTP_SERVER_PID=$!
 
 # Retrieve the certificate
