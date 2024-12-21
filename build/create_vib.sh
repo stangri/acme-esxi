@@ -42,12 +42,12 @@ cat > ${VIB_DESC_FILE} << __W2C__
   <type>bootbank</type>
   <name>acme-esxi</name>
   <version>${VIB_TAG}-0.0.0</version>
-  <vendor>natethesage</vendor>
+  <vendor>stangri</vendor>
   <summary>ACME and Let's Encrypt for ESXi</summary>
   <description>ACME and Let's Encrypt for ESXi</description>
   <release-date>${VIB_DATE}</release-date>
   <urls>
-    <url key="acme-esxi">https://github.com/NateTheSage/acme-esxi</url>
+    <url key="acme-esxi">https://github.com/stangri/acme-esxi</url>
   </urls>
   <relationships>
     <depends/>
