@@ -119,4 +119,4 @@ else
   fi
 fi
 
-for s in /etc/init.d/*; do if $s | grep ssl_reset > /dev/null; then $s ssl_reset; fi; done
+for s in /etc/init.d/*; do if { "$s" | grep ssl_reset && "$s" status; } >/dev/null 2>&1; then "$s" ssl_reset; fi; done
